@@ -7,7 +7,11 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
+import matplotlib.font_manager as fm
+import matplotlib as mpl
 
+# 設置支援中文的字體
+mpl.rcParams['font.family'] = 'Noto Sans CJK TC'  # 使用 Noto Sans CJK TC 字體
 # 設置頁面
 st.set_page_config(page_title="手寫英文字母辨識", layout="wide")
 

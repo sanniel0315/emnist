@@ -151,8 +151,9 @@ with col2:
             plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei', 'SimHei', 'Arial Unicode MS']
             plt.rcParams['axes.unicode_minus'] = False
             plt.bar(df['字母'][:5], df['機率 (%)'][:5])
-            plt.xlabel('字母')
-            plt.ylabel('機率 (%)')
+            plt.xlabel('Letter')
+            plt.ylabel('Probability (%)')
+            plt.title('Prediction Probabilities')
             plt.ylim(0, 100)
             
             # 顯示圖表

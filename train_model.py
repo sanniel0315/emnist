@@ -144,7 +144,7 @@ model.summary()
 # 訓練模型
 history = model.fit(
     train_images, train_labels, 
-    epochs=10, 
+    epochs=50, 
     validation_data=(test_images, test_labels),
     batch_size=128
 )

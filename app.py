@@ -7,11 +7,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
-import matplotlib.font_manager as fm
-import matplotlib as mpl
 
-# 設置支援中文的字體
-mpl.rcParams['font.family'] = 'Noto Sans CJK TC'  # 使用 Noto Sans CJK TC 字體
 # 設置頁面
 st.set_page_config(page_title="手寫英文字母辨識", layout="wide")
 
@@ -22,59 +18,31 @@ st.write('請在左側畫布上繪製一個英文大寫字母 (A-Z)，然後點�
 # 定義英文字母類別
 class_names = [chr(ord('A')+i) for i in range(26)]
 
-# 嘗試直接定義與訓練好的模型相同的結構
-def create_model():
-    # 這裡需要確保模型結構與訓練時完全一致
-    model = tf.keras.models.Sequential([
-        tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)),
-        tf.keras.layers.MaxPooling2D((2, 2)),
-        tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
-        tf.keras.layers.MaxPooling2D((2, 2)),
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(128, activation='relu'),
-        tf.keras.layers.Dense(26, activation='softmax')
-    ])
-    
-    # 編譯模型
-    model.compile(optimizer='adam',
-                  loss='categorical_crossentropy',
-                  metrics=['accuracy'])
-    return model
-
-# 檢查模型檔案是否存在
-model_path = 'emnist_model.h5'
-model_path_alternate = '../emnist_model.h5'  # 檢查上層目錄
-
 # 載入或創建模型
 @st.cache_resource
-def load_or_create_model():
+def load_model():
+    model_path = 'emnist_model.h5'
+    model_path_alternate = '../emnist_model.h5'  # 檢查上層目錄
+    
     try:
         # 嘗試載入現有模型
         if os.path.exists(model_path):
-            st.info("嘗試載入模型...")
-            try:
-                return tf.keras.models.load_model(model_path)
-            except Exception as e:
-                st.warning(f"載入模型時發生錯誤: {e}，將使用新建模型")
+            st.info("載入模型中...")
+            return tf.keras.models.load_model(model_path)
         elif os.path.exists(model_path_alternate):
-            st.info("嘗試從上層目錄載入模型...")
-            try:
-                return tf.keras.models.load_model(model_path_alternate)
-            except Exception as e:
-                st.warning(f"載入模型時發生錯誤: {e}，將使用新建模型")
-        
-        # 如果都失敗，創建新模型
-        st.warning("找不到可用的模型檔案，將創建新模型")
-        return create_model()
-        
+            st.info("從上層目錄載入模型中...")
+            return tf.keras.models.load_model(model_path_alternate)
+        else:
+            st.error("找不到模型檔案! 請先執行 train_emnist_model.py")
+            st.stop()
     except Exception as e:
-        st.error(f"處理模型時發生錯誤: {e}")
-        return create_model()
+        st.error(f"載入模型時發生錯誤: {e}")
+        st.stop()
 
-# 載入或創建模型
+# 載入模型
 with st.spinner('準備模型中...'):
-    model = load_or_create_model()
-    st.success('模型準備完成！')
+    model = load_model()
+    st.success('模型準備完成!')
 
 # 創建兩列布局
 col1, col2 = st.columns(2)
@@ -115,7 +83,7 @@ with col2:
                 image = rgb2gray(rgba2rgb(canvas_result.image_data))
                 # 調整大小為 28x28 像素
                 image_resized = resize(image, (28, 28), anti_aliasing=True)
-                # 反轉顏色（因為 MNIST 數據集是黑底白字）
+                # 反轉顏色（因為 EMNIST 數據集是黑底白字）
                 image_processed = np.abs(1-image_resized)
                 # 重塑為模型輸入格式
                 X = image_processed.reshape(1, 28, 28, 1)
@@ -148,12 +116,10 @@ with col2:
             
             # 只顯示前 5 個最可能的字母
             chart = plt.figure(figsize=(10, 4))
-            plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei', 'SimHei', 'Arial Unicode MS']
-            plt.rcParams['axes.unicode_minus'] = False
             plt.bar(df['字母'][:5], df['機率 (%)'][:5])
-            plt.xlabel('Letter')
-            plt.ylabel('Probability (%)')
-            plt.title('Prediction Probabilities')
+            plt.xlabel('Letter')  # 使用英文標籤
+            plt.ylabel('Probability (%)')  # 使用英文標籤
+            plt.title('Prediction Probabilities')  # 使用英文標題
             plt.ylim(0, 100)
             
             # 顯示圖表
@@ -171,7 +137,7 @@ with st.expander("使用說明"):
     ### 注意事項:
     - 請盡量清晰地繪製標準的英文大寫字母
     - 字母應填滿畫布的大部分區域以獲得更好的辨識效果
-    - 系統是基於 MNIST 數據集訓練的，對某些手寫風格的辨識可能不夠準確
+    - 本系統使用 EMNIST 數據集訓練，專門用於辨識英文手寫字母
     """)
 
 # 顯示關於頁面
@@ -183,12 +149,11 @@ with st.expander("關於本應用"):
     
     #### 技術細節:
     - 使用 TensorFlow/Keras 建立卷積神經網絡 (CNN) 模型
-    - 基於 MNIST 數據集訓練
+    - 基於 EMNIST (Extended MNIST) 數據集訓練
     - 使用 Streamlit 創建網頁界面
     - 使用 Streamlit Drawable Canvas 實現繪圖功能
     
-    #### 如何改進:
-    - 使用專門的 EMNIST 字母數據集可提高辨識精度
-    - 增加數據增強和更複雜的模型架構可提升辨識能力
-    - 加入對小寫字母和數字的辨識
+    #### EMNIST 數據集:
+    EMNIST 是 MNIST 的擴展版本，包含手寫英文字母和數字。本應用使用 EMNIST Letters 子集，
+    其中包含 26 個大寫英文字母 (A-Z)，提供了比單純使用 MNIST 更高的辨識準確率。
     """)

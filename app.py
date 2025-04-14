@@ -21,8 +21,8 @@ class_names = [chr(ord('A')+i) for i in range(26)]
 # 載入或創建模型
 @st.cache_resource
 def load_model():
-    model_path = 'keras_model.h5'
-    model_path_alternate = '../keras_model.h5'  # 檢查上層目錄
+    model_path = 'emnist_model.h5'
+    model_path_alternate = '../emnist_model.h5'  # 檢查上層目錄
     
     try:
         # 嘗試載入現有模型
